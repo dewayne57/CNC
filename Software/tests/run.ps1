@@ -5,7 +5,7 @@ $compilerPath = (Get-Command $Compiler -ErrorAction Stop).Source
 $env:PATH = (Split-Path -Parent $compilerPath) + [System.IO.Path]::PathSeparator + $env:PATH
 $sourceDir = Split-Path -Parent $PSScriptRoot
 $testExe = Join-Path ([System.IO.Path]::GetTempPath()) ('cnc-motion-tests-' + [guid]::NewGuid().ToString('N') + '.exe')
-$sources = @('GCodeParser.cpp', 'MotionProfile.cpp', 'Motion.cpp', 'ArcMotion.cpp', 'Homing.cpp', 'GantryHoming.cpp', 'XGantry.cpp', 'EncoderFeedback.cpp', 'Spindle.cpp', 'Executor.cpp') |
+$sources = @('GCodeParser.cpp', 'MotionProfile.cpp', 'Motion.cpp', 'ArcMotion.cpp', 'Homing.cpp', 'GantryHoming.cpp', 'XGantry.cpp', 'EncoderFeedback.cpp', 'Spindle.cpp', 'Display.cpp', 'Executor.cpp') |
     ForEach-Object { Join-Path $sourceDir $_ }
 try {
     # Fixture: 1.8-degree motors, 16 microsteps, 4:1 gears, 160 mm/axle rev = 80 steps/mm.

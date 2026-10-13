@@ -32,14 +32,19 @@ void Motion::begin() {
     digitalWrite(Config::STEP_PINS[i], LOW);
     pinMode(Config::STEP_PINS[i], OUTPUT);
     pinMode(Config::DIR_PINS[i], OUTPUT);
+    pinMode(Config::HOME_PINS[i], INPUT_PULLUP);
     pinMode(Config::LIMIT_PINS[i], INPUT_PULLUP);
   }
   pinMode(Config::ESTOP_PIN, INPUT_PULLUP);
 }
 
 bool Motion::estopActive() { return digitalRead(Config::ESTOP_PIN) == LOW; }
+bool Motion::homeActive(uint8_t axis) {
+  return axis == 0 ? XGantry::homeSwitch(0) || XGantry::homeSwitch(1)
+                   : digitalRead(Config::HOME_PINS[axis]) == LOW;
+}
 bool Motion::limitActive(uint8_t axis) {
-  return axis == 0 ? XGantry::homeSwitch(0) || XGantry::homeSwitch(1) || XGantry::hardLimit()
+  return axis == 0 ? XGantry::hardLimit()
                    : digitalRead(Config::LIMIT_PINS[axis]) == LOW;
 }
 bool Motion::interlockActive(uint8_t ignoredLimits) {

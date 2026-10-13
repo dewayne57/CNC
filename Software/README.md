@@ -9,6 +9,12 @@ upload. No third-party libraries are required. Serial uses **115200 baud**.
 travel in `Config.h` before X motion or arcs can run. See `DUAL_X_SETUP.md` for
 the full pin map, calibration, encoder diagnostics and commissioning procedure.
 
+The default pin allocation matches the nets in `Hardware/CNC.kicad_sch`.
+Every pin in `Config.h` has a `CNC_*_PIN` compiler define, so alternate wiring
+can be selected without editing the firmware. For example,
+`-DCNC_Y_STEP_PIN=32` changes only the Y step output. Polarity and motion
+calibration remain configurable in `Config.h`.
+
 ## Files
 
 | File | Responsibility |
@@ -26,9 +32,14 @@ the full pin map, calibration, encoder diagnostics and commissioning procedure.
 | `XGantry.*` | Separate X1/X2 outputs and physical command pulse counters |
 | `EncoderFeedback.*` | Interrupt quadrature decoding, following-error and skew faults |
 | `Spindle.*` | Optional PWM and direction outputs |
+| `Display.*` | 20x4 parallel LCD status and position display |
 | `examples/square.gcode` | Slow 10 mm square without spindle activation |
 | `examples/arcs.gcode` | Quarter arcs, full circle and helix without spindle activation |
 | `tests/` | Host simulation tests with fake pins, switches and time |
+
+The LCD shows the current operation (`IDLE`, `MOVING`, `HOMING`, `DWELL`,
+`SPINDLE`, or `ALARM`) and live X/Y/Z coordinates. It refreshes one row every
+100 ms so display traffic remains bounded while motion is running.
 
 ## DM556 wiring and calibration
 
@@ -40,14 +51,18 @@ power connections. Do not connect a motor supply or 24 V control signal to the M
 
 | Signal | X1 | X2 | Y | Z |
 | --- | --- | --- | --- | --- |
-| PUL+ / STEP | D2 | D26 | D3 | D4 |
-| DIR+ | D5 | D27 | D6 | D7 |
-| ENA+ | D8 | D28 | D11 | D12 |
-| Home input | D23 | D29 | D24 | D25 |
-| Separate hard-limit input | D30 | D31 | Combined with home | Combined with home |
-| Encoder A / B | D18 / D19 | D20 / D21 | None | None |
+| PUL+ / STEP | D30 | D30 | D33 | D36 |
+| DIR+ | D31 | D31 | D34 | D37 |
+| ENA+ | D32 | D32 | D35 | D38 |
+| Home input | D2 | D3 | D4 | D5 |
+| Separate hard-limit input | D6 | D7 | D8 | D9 |
+| Encoder A / B | D22 / D23 | D24 / D25 | None | None |
+| Spindle PWM / direction | D50 / D51 | — | — | — |
+| LCD control | RS D39, RW D40, E D41 | — | — | — |
+| LCD data | D42-D49 | — | — | — |
 
-Each enable output is separate to avoid loading one Mega pin with three input
+X1/X2 STEP, DIR and ENA nets are shared in the schematic. Each Y/Z enable
+output is separate to avoid loading one Mega pin with multiple input
 optocouplers. Verify your exact module's input voltage, current, pulse mode,
 active edge and enable polarity. Select **5 V control**, **pulse/direction**,
 and **rising-edge pulses**, where configurable. Defaults assume LOW enables

@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Arduino: Compile",
+      "type": "shell",
+      "command": "arduino-cli",
+      "args": ["compile", "--fqbn", "arduino:avr:mega", "Software"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Arduino: Upload",
+      "type": "shell",
+      "command": "arduino-cli",
+      "args": [
+        "compile",
+        "--upload",
+        "--port",
+        "${input:serialPort}",
+        "--fqbn",
+        "arduino:avr:mega",
+        "Software"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Arduino: List Boards",
+      "type": "shell",
+      "command": "arduino-cli",
+      "args": ["board", "list"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "serialPort",
+      "type": "promptString",
+      "description": "Serial port of the Arduino Mega (run 'Arduino: List Boards' to find it)",
+      "default": "COM5"
+    }
+  ]
+}

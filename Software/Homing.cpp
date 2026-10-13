@@ -30,7 +30,7 @@ void nextAxis() {
     if (!GantryHoming::start(remainingAxes)) fail();
     return;
   }
-  if (Motion::limitActive(axis))
+  if (Motion::homeActive(axis))
     move(CLEAR, -Config::HOME_PULL_OFF_MM, Config::HOME_LATCH_MM_MIN);
   else move(SEEK, Config::HOME_MAX_TRAVEL_MM[axis], Config::HOME_SEEK_MM_MIN);
 }
@@ -60,7 +60,7 @@ void Homing::update() {
   }
   bool seeking = phase == SEEK || phase == LATCH;
   if (!settling) {
-    if (seeking && Motion::limitActive(axis)) {
+    if (seeking && Motion::homeActive(axis)) {
       Motion::halt(); // Capture contact before issuing another pulse.
       settling = true; settleStart = millis();
     } else if (!Motion::busy()) {
@@ -70,7 +70,7 @@ void Homing::update() {
     return;
   }
   // Require the expected level continuously throughout the settle window.
-  if (Motion::limitActive(axis) != seeking) { settleStart = millis(); return; }
+  if (Motion::homeActive(axis) != seeking) { settleStart = millis(); return; }
   if (static_cast<unsigned long>(millis() - settleStart) < Config::HOME_DEBOUNCE_MS) return;
   switch (phase) {
     case CLEAR:

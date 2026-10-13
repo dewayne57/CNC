@@ -21,6 +21,7 @@ void digitalWrite(uint8_t pin, uint8_t value);
 int digitalRead(uint8_t pin);
 void pinMode(uint8_t pin, uint8_t mode);
 void analogWrite(uint8_t pin, int value);
+char* dtostrf(double value, signed char width, unsigned char precision, char* buffer);
 struct FakeSerial {
   std::string output;
   void print(const __FlashStringHelper* value) { output += reinterpret_cast<const char*>(value); }

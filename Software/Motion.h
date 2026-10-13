@@ -13,5 +13,6 @@ void position(float result[3]);
 bool setPosition(const float position[3]);
 bool interlockActive(uint8_t ignoredLimits = 0);
 bool estopActive();
+bool homeActive(uint8_t axis);
 bool limitActive(uint8_t axis);
 }

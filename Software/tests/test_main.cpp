@@ -6,6 +6,7 @@
 #include "ArcMotion.h"
 #include "Homing.h"
 #include "Executor.h"
+#include <cstdio>
 #include "XGantry.h"
 #include "EncoderFeedback.h"
 #include <cmath>
@@ -31,6 +32,10 @@ unsigned long millis() { return clockUs / 1000; }
 void delayMicroseconds(unsigned int value) { clockUs += value; }
 void pinMode(uint8_t, uint8_t) {}
 void analogWrite(uint8_t pin, int value) { pins[pin] = value; }
+char* dtostrf(double value, signed char, unsigned char precision, char* buffer) {
+  std::snprintf(buffer, 16, "%.*f", precision, value);
+  return buffer;
+}
 void attachInterrupt(int interrupt, void (*callback)(), int) { interrupts[interrupt] = callback; }
 static void encoderEdge(uint8_t side, int sign) {
   static const uint8_t sequence[4] = {0, 1, 3, 2};
@@ -67,7 +72,7 @@ int digitalRead(uint8_t pin) {
   if (pin == Config::X2_HOME_PIN && limitModes[3])
     return (Config::HOME_DIRECTION[0] < 0 ? physical[3] <= 0 : physical[3] >= 0) ? LOW : HIGH;
   for (int i = 0; i < 3; ++i)
-    if (pin == Config::LIMIT_PINS[i] && limitModes[i])
+    if (pin == Config::HOME_PINS[i] && limitModes[i])
       return (Config::HOME_DIRECTION[i] < 0 ? physical[i] <= 0 : physical[i] >= 0) ? LOW : HIGH;
   return pins[pin];
 }
@@ -191,9 +196,9 @@ static void homing() {
   limitModes[3] = 1; physical[3] = -80;
   CHECK(Homing::start(1)); finishHome(); CHECK(!Homing::failed()); at(3, 0, 0);
   reset(); CHECK(Homing::start(1)); finishHome(); CHECK(Homing::failed()); // Never triggers.
-  reset(); pins[Config::LIMIT_PINS[0]] = LOW;
+  reset(); pins[Config::HOME_PINS[0]] = LOW;
   CHECK(Homing::start(1)); finishHome(); CHECK(Homing::failed()); // Never releases.
-  reset(); pins[Config::LIMIT_PINS[1]] = LOW;
+  reset(); pins[Config::HOME_PINS[1]] = LOW;
   CHECK(!Homing::start(1)); // Unselected active limit is never ignored.
   reset(); limitModes[0] = 1; physical[0] = 800;
   CHECK(Homing::start(1)); pins[Config::ESTOP_PIN] = LOW;

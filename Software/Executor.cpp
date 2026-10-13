@@ -5,6 +5,7 @@
 #include "ArcMotion.h"
 #include "Homing.h"
 #include "EncoderFeedback.h"
+#include "Display.h"
 #include <math.h>
 
 namespace {
@@ -35,6 +36,7 @@ void Executor::emergencyStop() {
   Homing::cancel();
   Motion::stop();
   Spindle::stop();
+  Display::setOperation(Display::Operation::ALARM);
   pending = dwelling = false;
   if (!alarm) Serial.println(F("error: emergency stop; reset board to clear alarm"));
   alarm = true;
@@ -61,7 +63,9 @@ void Executor::update() {
   if (dwelling && static_cast<unsigned long>(millis() - dwellStart) >= dwellDuration)
     dwelling = false;
   if (pending && !Motion::busy() && !dwelling && !ArcMotion::busy() && !Homing::busy()) {
-    pending = false; ok();
+    pending = false;
+    Display::setOperation(Display::Operation::IDLE);
+    ok();
   }
 }
 
@@ -98,7 +102,9 @@ void Executor::execute(const GCode& code) {
     if (!Homing::start(code.has(XYZ) ? code.words & XYZ : XYZ)) {
       error(F("cannot start homing")); return;
     }
-    pending = true; return;
+    pending = true;
+    Display::setOperation(Display::Operation::HOMING);
+    return;
   }
   if (Motion::interlockActive()) {
     Spindle::stop(); error(F("limit active; home selected axes with G28")); return;
@@ -113,8 +119,10 @@ void Executor::execute(const GCode& code) {
           }
           spindleRpm = code.s;
         }
-        Spindle::run(spindleRpm, code.m == 3); break;
-      case 5: if (!only(code, 0)) return; Spindle::stop(); break;
+        Spindle::run(spindleRpm, code.m == 3);
+        Display::setOperation(Display::Operation::SPINDLE); break;
+      case 5: if (!only(code, 0)) return; Spindle::stop();
+        Display::setOperation(Display::Operation::IDLE); break;
       case 17: if (!only(code, 0)) return; Motion::enable(true); break;
       case 18: case 84: if (!only(code, 0)) return; Motion::enable(false); break;
       case 400: if (!only(code, 0)) return; break;
@@ -160,7 +168,10 @@ void Executor::execute(const GCode& code) {
         error(F("invalid motion target or rate")); return;
       }
       feed = nextFeed; modalMotion = command;
-      if (Motion::busy() || ArcMotion::busy()) pending = true;
+      if (Motion::busy() || ArcMotion::busy()) {
+        pending = true;
+        Display::setOperation(Display::Operation::MOVING);
+      }
       else ok();
       return;
     }
@@ -170,7 +181,9 @@ void Executor::execute(const GCode& code) {
         error(F("G4 requires P milliseconds in range 0..3600000")); return;
       }
       dwellDuration = static_cast<unsigned long>(code.p);
-      dwellStart = millis(); dwelling = pending = true; return;
+      dwellStart = millis(); dwelling = pending = true;
+      Display::setOperation(Display::Operation::DWELLING);
+      return;
     case 17: case 18: case 19:
       if (!only(code, 0)) return;
       plane = command; break;

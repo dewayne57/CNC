@@ -19,7 +19,7 @@ void XGantry::begin() {
     pinMode(stepPins[side], OUTPUT);
     pinMode(dirPins[side], OUTPUT);
   }
-  pinMode(Config::LIMIT_PINS[0], INPUT_PULLUP);
+  pinMode(Config::HOME_PINS[0], INPUT_PULLUP);
   pinMode(Config::X2_HOME_PIN, INPUT_PULLUP);
   for (uint8_t side = 0; side < 2; ++side) pinMode(Config::X_HARD_LIMIT_PINS[side], INPUT_PULLUP);
 }
@@ -43,7 +43,7 @@ void XGantry::pulseLow() {
   for (uint8_t side = 0; side < 2; ++side) digitalWrite(stepPins[side], LOW);
 }
 bool XGantry::homeSwitch(uint8_t side) {
-  return digitalRead(side == 0 ? Config::LIMIT_PINS[0] : Config::X2_HOME_PIN) == LOW;
+  return digitalRead(side == 0 ? Config::HOME_PINS[0] : Config::X2_HOME_PIN) == LOW;
 }
 bool XGantry::hardLimit() {
   return digitalRead(Config::X_HARD_LIMIT_PINS[0]) == LOW ||
